@@ -1,28 +1,36 @@
 {
-  "name": "cognito-srp",
-  "version": "0.2.0",
-  "description": "Secure Remote Password protocol implementation compatible with Amazon Cognito.",
+  "name": "cognito-srp-browser-client",
+  "version": "0.1.0",
+  "description": "Amazon Cognito Secure Remote Password client protocol for browsers.",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
   "scripts": {
     "test": "jest --config=jest.config.json",
     "prepublish": "tsc"
   },
-  "author": "Stewart MacKenzie-Leigh",
+  "contributors": [
+    {
+      "name": "Richard Underwood"
+    },
+    {
+      "name": "Stewart MacKenzie-Leigh"
+    }
+  ],
   "license": "ISC",
   "devDependencies": {
-    "@types/jest": "^22.1.1",
-    "@types/jsbn": "^1.2.29",
-    "jest": "^22.1.4",
-    "ts-jest": "^22.0.3",
-    "typescript": "^2.7.1"
+    "@types/jest": "^29.5.8",
+    "@types/jsbn": "^1.2.33",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "jsbn": "^1.1.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stewartml/cognito-srp.git"
+    "url": "git+https://github.com/richard-underwood/cognito-srp-browser-client.git"
   },
   "keywords": [
     "amazon",
@@ -30,10 +38,12 @@
     "cognito",
     "srp",
     "identity",
-    "auth"
+    "auth",
+    "browser"
   ],
   "bugs": {
-    "url": "https://github.com/stewartml/cognito-srp/issues"
+    "url": "https://github.com/richard-underwood/cognito-srp-browser-client/issues"
   },
-  "homepage": "https://github.com/stewartml/cognito-srp#readme"
+  "homepage": "https://github.com/richard-underwood/cognito-srp-browser-client#readme",
+  "packageManager": "yarn@4.0.2"
 }

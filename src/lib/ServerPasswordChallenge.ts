@@ -12,7 +12,7 @@ export class ServerPasswordChallenge {
   constructor(
     public poolname: string,
     public user: ServerUser,
-    b: string | Buffer
+    b: string | Buffer,
   ) {
     this.verifier = new BigInteger(user.verifier, 16);
     this.b = getBigInteger(b);
@@ -39,12 +39,10 @@ export class ServerPasswordChallenge {
 
     const scramblingParameter = calculateScramblingParameter(
       Buffer.from(A, 'hex'),
-      this.calculateB()
+      this.calculateB(),
     );
 
-    const sessionKey = Aint.multiply(
-      this.verifier.modPow(scramblingParameter, N)
-    )
+    const sessionKey = Aint.multiply(this.verifier.modPow(scramblingParameter, N))
       .modPow(this.b, N)
       .mod(N)
       .toBuffer(Nbytes);
@@ -53,7 +51,7 @@ export class ServerPasswordChallenge {
       this.poolname,
       this.user.username,
       sessionKey,
-      scramblingParameter.toBuffer()
+      scramblingParameter.toBuffer(),
     );
   }
 }

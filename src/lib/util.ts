@@ -5,10 +5,7 @@ import { ClientUser } from './UserPool';
 export const HASH_TYPE = 'sha256';
 
 export function getHash(data: Buffer | string, length?: number) {
-  const hash = crypto
-    .createHash(HASH_TYPE)
-    .update(data)
-    .digest('hex');
+  const hash = crypto.createHash(HASH_TYPE).update(data).digest('hex');
 
   return length ? hash.padStart(length * 2, '0') : hash;
 }
@@ -44,11 +41,7 @@ export function calculateScramblingParameter(A: Buffer, B: Buffer) {
   return BigInteger.fromBuffer(hash);
 }
 
-export function calculatePrivateKey(
-  poolname: string,
-  user: ClientUser,
-  salt: string
-) {
+export function calculatePrivateKey(poolname: string, user: ClientUser, salt: string) {
   const hash = getHash(`${poolname}${user.username}:${user.password}`, 32);
   const buffer = Buffer.from(padHex(salt) + hash, 'hex');
   return new BigInteger(getHash(buffer, 32), 16);

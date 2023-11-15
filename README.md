@@ -1,26 +1,32 @@
-# cognito-srp
+# cognito-srp-browser-client
 
-Secure Remote Password protocol implementation compatible with Amazon Cognito.
+Amazon Cognito Secure Remote Password client protocol for browsers.
 
-This package borrows heavily from the [srp-js](https://www.npmjs.com/package/srp-js) package, but implements a slight variant
-of the protocol in order to work with Amazon Cognito. Also inspired by bits from
-[amazon-cognito-identity-js](http://www.npmjs.com/package/amazon-cognito-identity-js), the official client library.
+This package is designed to be used on a modern web browser, primarily to provide SRP for the SDK v3
+[@aws-sdk/client-cognito-identity-provider](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cognito-identity-provider/)
+package.
 
-Use it if you want to interact with Cognito without all the bloat of the AWS SDK, or if you want to write a server that acts
-like Cognito, and is therefore compatible with the AWS SDK. Alternatively, use simply as a replacement for `srp-js`.
+## History
+
+This package is forked from [cognito-srp](https://github.com/sjmeverett/cognito-srp/). It has been
+updated to work on modern browsers natively, without the need for node.js polyfills. The cognito-srp
+package provides server functionality which has been stripped out of this package.
+
+The original cognito-srp package borrows heavily from the [srp-js](https://www.npmjs.com/package/srp-js) package, but implements a slight variant of the protocol in order to work with Amazon Cognito. Also
+inspired by bits from [amazon-cognito-identity-js](http://www.npmjs.com/package/amazon-cognito-identity-js), the official client library.
 
 ## Usage
 
 First, install:
 
 ```
-yarn add cognito-srp
+yarn add cognito-srp-browser-client
 ```
 
 Then import. Your starting point will usually be the `UserPool` class:
 
 ```js
-import { UserPool } from 'cognito-srp';
+import { UserPool } from ' cognito-srp-browser-client';
 ```
 
 Instantiate a pool, using your pool name:
@@ -36,81 +42,10 @@ const UserPoolId = 'us-east-2_7DZy4Fkn7';
 const poolname = UserPoolId.split('_')[1];
 ```
 
-Then the usage differs depending on whether you want to use it on the client or server.
-
-### On the server
-
-Before you can check the identity of users, you need to create at least one:
-
-```js
-const user = await userPool.createUser({username: 'testuser', password: 'pass123'});
-```
-
-The `user` object contains the `username`, a `salt`, and a `verifier` value, a long string of hex
-which can be thought of as a password hash.
-
-When checking the identity of a user, the client will first make a request, passing
-the username and a generated key called `A`.
-
-Assuming you can find the user from the username, you can then ask for a password challenge:
-
-```js
-const challenge = await userPool.getServerChallenge(user);
-```
-
-From the challenge, you can get the server's generated key, called `B`, to pass back to the client.
-
-```js
-const B = challenge.calculateB();
-```
-
-You can also start a session, passing the client's key, `A`:
-
-```js
-const session = challenge.getSession(A);
-```
-
-The server sends `B` back to the client, along with their salt and a base64-encoded "secret block".
-I'm not completely sure what that block is for, perhaps session management.
-
-Then the client will make another request with a password signature, the secret block, and a timestamp.
-To verify that they have the correct password, you must also calculate the signature and compare the two.
-If they match, the client has the correct password.
-
-```js
-const signature = session.calculateSignature(secretBlock, timestamp);
-
-if (signature === requestSignature) {
-  // yay
-}
-```
-
-If you need to bin the session and rehydrate it later, for example, between the two requests, you can
-recreate it from the "HKDF" value:
-
-```js
-const hkdf = session.getHkdf();
-
-// ...
-
-const newSession = new Session(poolname, username, hkdf);
-```
-
-Note that knowing the HKDF is as good as knowing the password for this session, so keep it safe
-if you're writing something important.
-
-If you're writing a mock server to test something that uses cognito, you could send the HKDF
-out as the "secret block", as the client will echo it back to you on the next request, and
-it saves trying to store it.
-
-**This is obviously not a good idea in production.**
-
-### On the client
-
 Once the user has entered their username and password, you can create a challenge:
 
 ```js
-const challenge = await userPool.getClientChallenge({username, password});
+const challenge = await userPool.getClientChallenge({ username, password });
 ```
 
 You can then make a request to the server with the user's username and a client key (`A`):
@@ -138,9 +73,9 @@ identity is established.
 
 ## Notes
 
-The exact format of the requests and responses to Amazon Cognito is outside the scope of this package &ndash;
-it only implements the SRP stuff, and you can wrap it in whatever protocol you want.
+The exact format of the requests and responses to Amazon Cognito is outside the scope of this
+package &ndash; it only implements the SRP stuff, and you can wrap it in whatever protocol you want.
 
-Although this library is compatible with Cognito and therefore successfully implements the Secure Remote Password
-protocol, I'm not a security expert, and I don't claim to understand the maths behind it &ndash; keep that in
-mind before you use it for something important.
+Although this library is compatible with Cognito and therefore successfully implements the Secure
+Remote Password protocol, I'm not a security expert, and I don't claim to understand the maths
+behind it &ndash; keep that in mind before you use it for something important.

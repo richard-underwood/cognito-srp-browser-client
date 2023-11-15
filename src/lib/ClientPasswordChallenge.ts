@@ -1,10 +1,6 @@
 import { ClientUser } from './UserPool';
 import { BigInteger } from './BigInteger';
-import {
-  getBigInteger,
-  calculateScramblingParameter,
-  calculatePrivateKey
-} from './util';
+import { getBigInteger, calculateScramblingParameter, calculatePrivateKey } from './util';
 import { g, N, Nbytes, multiplierParameter } from './constants';
 import { Session } from './Session';
 
@@ -15,7 +11,7 @@ export class ClientPasswordChallenge {
   constructor(
     public poolname: string,
     public user: ClientUser,
-    a: string | Buffer
+    a: string | Buffer,
   ) {
     this.a = getBigInteger(a);
   }
@@ -38,12 +34,10 @@ export class ClientPasswordChallenge {
 
     const scramblingParameter = calculateScramblingParameter(
       this.calculateA(),
-      Buffer.from(B, 'hex')
+      Buffer.from(B, 'hex'),
     );
 
-    const sessionKey = Bint.subtract(
-      multiplierParameter.multiply(g.modPow(privateKey, N))
-    )
+    const sessionKey = Bint.subtract(multiplierParameter.multiply(g.modPow(privateKey, N)))
       .modPow(this.a.add(scramblingParameter.multiply(privateKey)), N)
       .mod(N)
       .toBuffer(Nbytes);
@@ -52,7 +46,7 @@ export class ClientPasswordChallenge {
       this.poolname,
       this.user.username,
       sessionKey,
-      scramblingParameter.toBuffer()
+      scramblingParameter.toBuffer(),
     );
   }
 }

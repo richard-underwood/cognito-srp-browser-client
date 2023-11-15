@@ -24,10 +24,7 @@ export class UserPool {
 
     const privateKey = calculatePrivateKey(this.poolname, user, salt);
 
-    const verifier = g
-      .modPow(privateKey, N)
-      .toBuffer(Nbytes)
-      .toString('hex');
+    const verifier = g.modPow(privateKey, N).toBuffer(Nbytes).toString('hex');
 
     return { username: user.username, salt, verifier };
   }

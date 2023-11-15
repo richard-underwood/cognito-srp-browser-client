@@ -6,7 +6,7 @@ declare module 'jsbn' {
   }
 }
 
-_BigInteger.prototype.toBuffer = function(length?: number) {
+_BigInteger.prototype.toBuffer = function (length?: number) {
   let str = this.toString(16);
 
   if (length) {
