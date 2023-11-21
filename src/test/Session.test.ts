@@ -1,27 +1,22 @@
-import { Session } from '../lib';
-import {
-  poolname,
-  clientUser,
-  sessionKey,
-  scramblingParameter,
-  hkdf
-} from './constants';
+import { Session } from '../lib/index';
+import { hexStringToArray } from '../lib/util';
+import { poolname, clientUser, sessionKey, scramblingParameter, hkdf } from './constants';
 
 describe('Session', () => {
-  it('should be constructable from session key and scrambling parameter', () => {
+  it('should be constructable from session key and scrambling parameter', async () => {
     const session = new Session(
       poolname,
       clientUser.username,
-      Buffer.from(sessionKey, 'hex'),
-      Buffer.from(scramblingParameter, 'hex')
+      hexStringToArray(sessionKey),
+      hexStringToArray(scramblingParameter),
     );
-    expect(session.getHkdf()).toMatchSnapshot();
-    expect(session.calculateSignature('secret', 'timestamp')).toMatchSnapshot();
+    expect(await session.getHkdf()).toMatchSnapshot();
+    expect(await session.calculateSignature('secret', 'timestamp')).toMatchSnapshot();
   });
 
-  it('should be constructable from hkdf', () => {
+  it('should be constructable from hkdf', async () => {
     const session = new Session(poolname, clientUser.username, hkdf);
-    expect(session.getHkdf()).toMatchSnapshot();
-    expect(session.calculateSignature('secret', 'timestamp')).toMatchSnapshot();
+    expect(await session.getHkdf()).toMatchSnapshot();
+    expect(await session.calculateSignature('secret', 'timestamp')).toMatchSnapshot();
   });
 });

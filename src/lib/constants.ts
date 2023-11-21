@@ -1,5 +1,5 @@
 import { BigInteger } from 'jsbn';
-import { getHash, HASH_TYPE } from './util';
+import { getHashString, HASH_TYPE, hexStringToArray } from './util';
 
 const Nhex = `FFFFFFFF FFFFFFFF C90FDAA2 2168C234 C4C6628B 80DC1CD1 29024E08
   8A67CC74 020BBEA6 3B139B22 514A0879 8E3404DD EF9519B3 CD3A431B
@@ -21,12 +21,11 @@ export const Nbits = N.bitLength();
 export const Nbytes = Nbits / 8;
 export const g = new BigInteger('2');
 export const infoBits = 'Caldera Derived Key\x01';
-export const multiplierParameter = getMultiplierParameter();
 export { HASH_TYPE };
 
-function getMultiplierParameter() {
+export async function getMultiplierParameter() {
   const Nhex = '00' + N.toString(16);
   const ghex = '0' + g.toString(16);
-  const hash = getHash(Buffer.from(Nhex + ghex, 'hex'), 32);
+  const hash = await getHashString(hexStringToArray(Nhex + ghex));
   return new BigInteger(hash, 16);
 }

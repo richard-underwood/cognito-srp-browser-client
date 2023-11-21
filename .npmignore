@@ -1,4 +1,9 @@
 src/
 .gitignore
 jest.config.json
+jest-custom-env.js
 tsconfig.json
+yarn.lock
+.yarnrc.yml
+.vscode
+.prettierrc.json

@@ -1,12 +1,13 @@
 import { BigInteger as _BigInteger } from 'jsbn';
+import { arrayToHexString, hexStringToArray } from './util';
 
 declare module 'jsbn' {
   export interface BigInteger {
-    toBuffer(length?: number): Buffer;
+    toArray(length?: number): Uint8Array;
   }
 }
 
-_BigInteger.prototype.toBuffer = function (length?: number) {
+_BigInteger.prototype.toArray = function (length?: number) {
   let str = this.toString(16);
 
   if (length) {
@@ -15,11 +16,11 @@ _BigInteger.prototype.toBuffer = function (length?: number) {
     str = '0' + str;
   }
 
-  return Buffer.from(str, 'hex');
+  return hexStringToArray(str);
 };
 
 export class BigInteger extends _BigInteger {
-  static fromBuffer(buffer: Buffer) {
-    return new BigInteger(buffer.toString('hex'), 16);
+  static fromArray(array: Uint8Array) {
+    return new BigInteger(arrayToHexString(array), 16);
   }
 }

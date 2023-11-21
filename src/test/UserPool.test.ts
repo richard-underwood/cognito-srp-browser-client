@@ -1,10 +1,6 @@
-import {
-  UserPool,
-  ServerPasswordChallenge,
-  ClientPasswordChallenge
-} from '../lib';
+import { UserPool, ClientPasswordChallenge } from '../lib/index';
 
-import { salt, poolname, clientUser, serverUser } from './constants';
+import { salt, poolname, clientUser } from './constants';
 
 describe('UserPool', () => {
   let pool: UserPool;
@@ -16,11 +12,6 @@ describe('UserPool', () => {
   it('should create a user', async () => {
     const user = await pool.createUser(clientUser, salt);
     expect(user).toMatchSnapshot();
-  });
-
-  it('should provide server challenges', async () => {
-    const challenge = await pool.getServerChallenge(serverUser);
-    expect(challenge).toBeInstanceOf(ServerPasswordChallenge);
   });
 
   it('should provide client challenges', async () => {

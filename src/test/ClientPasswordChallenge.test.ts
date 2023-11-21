@@ -1,4 +1,4 @@
-import { ClientPasswordChallenge } from '../lib';
+import { ClientPasswordChallenge } from '../lib/index';
 import { clientUser, secret, poolname, publicKey, salt } from './constants';
 
 describe('ClientPasswordChallenge', () => {
@@ -13,8 +13,8 @@ describe('ClientPasswordChallenge', () => {
     expect(A).toMatchSnapshot();
   });
 
-  it('should get a session', () => {
-    const session = challenge.getSession(publicKey, salt);
-    expect(session.getHkdf()).toMatchSnapshot();
+  it('should get a session', async () => {
+    const session = await challenge.getSession(publicKey, salt);
+    expect(await session.getHkdf()).toMatchSnapshot();
   });
 });

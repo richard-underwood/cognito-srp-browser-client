@@ -1,6 +1,5 @@
-import { randomBytes, calculatePrivateKey } from './util';
+import { calculatePrivateKey, randomBytes, arrayToHexString } from './util';
 import { N, Nbytes, g } from './constants';
-import { ServerPasswordChallenge } from './ServerPasswordChallenge';
 import { ClientPasswordChallenge } from './ClientPasswordChallenge';
 
 export interface ServerUser {
@@ -19,23 +18,18 @@ export class UserPool {
 
   async createUser(user: ClientUser, salt?: string): Promise<ServerUser> {
     if (!salt) {
-      salt = (await randomBytes(16)).toString('hex');
+      salt = arrayToHexString(randomBytes(16));
     }
 
-    const privateKey = calculatePrivateKey(this.poolname, user, salt);
+    const privateKey = await calculatePrivateKey(this.poolname, user, salt);
 
-    const verifier = g.modPow(privateKey, N).toBuffer(Nbytes).toString('hex');
+    const verifier = arrayToHexString(g.modPow(privateKey, N).toArray(Nbytes));
 
     return { username: user.username, salt, verifier };
   }
 
-  async getServerChallenge(user: ServerUser) {
-    const b = await randomBytes();
-    return new ServerPasswordChallenge(this.poolname, user, b);
-  }
-
   async getClientChallenge(user: ClientUser) {
-    const a = await randomBytes();
+    const a = randomBytes();
     return new ClientPasswordChallenge(this.poolname, user, a);
   }
 }

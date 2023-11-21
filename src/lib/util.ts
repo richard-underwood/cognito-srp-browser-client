@@ -1,17 +1,16 @@
-import * as crypto from 'crypto';
 import { BigInteger } from './BigInteger';
 import { ClientUser } from './UserPool';
 
-export const HASH_TYPE = 'sha256';
+export const HASH_TYPE = 'SHA-256';
 
-export function getHash(data: Buffer | string, length?: number) {
-  const hash = crypto.createHash(HASH_TYPE).update(data).digest('hex');
-
-  return length ? hash.padStart(length * 2, '0') : hash;
+export async function getHashString(data: Uint8Array | string) {
+  const dataArray = data instanceof Uint8Array ? data : stringToArray(data);
+  const hash = new Uint8Array(await crypto.subtle.digest(HASH_TYPE, dataArray));
+  return arrayToHexString(hash).padStart(64, '0');
 }
 
-export function padHex(data: string | Buffer) {
-  const hex = data instanceof Buffer ? data.toString('hex') : data;
+export function padHex(data: string | Uint8Array) {
+  const hex = data instanceof Uint8Array ? arrayToHexString(data) : data;
 
   if (hex.length % 2) {
     return '0' + hex;
@@ -22,35 +21,73 @@ export function padHex(data: string | Buffer) {
   }
 }
 
-export function randomBytes(size = 32) {
-  return new Promise<Buffer>((resolve, reject) => {
-    crypto.randomBytes(size, (err, result) => {
-      if (err) reject(err);
-      else resolve(result);
-    });
-  });
+export function randomBytes(size = 32): Uint8Array {
+  const data = new Uint8Array(size);
+  crypto.getRandomValues(data);
+  return data;
 }
 
-export function calculateScramblingParameter(A: Buffer, B: Buffer) {
-  const hash = crypto
-    .createHash(HASH_TYPE)
-    .update(Buffer.from(padHex(A), 'hex'))
-    .update(Buffer.from(padHex(B), 'hex'))
-    .digest();
+export async function calculateScramblingParameter(A: Uint8Array, B: Uint8Array) {
+  const paddedA = hexStringToArray(padHex(A));
+  const paddedB = hexStringToArray(padHex(B));
 
-  return BigInteger.fromBuffer(hash);
+  const dataArray = new Uint8Array(paddedA.length + paddedB.length);
+  dataArray.set(paddedA, 0);
+  dataArray.set(paddedB, paddedA.length);
+
+  const hash = new Uint8Array(await crypto.subtle.digest(HASH_TYPE, dataArray));
+
+  return BigInteger.fromArray(hash);
 }
 
-export function calculatePrivateKey(poolname: string, user: ClientUser, salt: string) {
-  const hash = getHash(`${poolname}${user.username}:${user.password}`, 32);
-  const buffer = Buffer.from(padHex(salt) + hash, 'hex');
-  return new BigInteger(getHash(buffer, 32), 16);
+export async function calculatePrivateKey(poolname: string, user: ClientUser, salt: string) {
+  const hash = await getHashString(`${poolname}${user.username}:${user.password}`);
+  const array = hexStringToArray(padHex(salt) + hash);
+  return new BigInteger(await getHashString(array), 16);
 }
 
-export function getBigInteger(data: string | Buffer) {
-  if (data instanceof Buffer) {
-    return BigInteger.fromBuffer(data);
+export function getBigInteger(data: string | Uint8Array) {
+  if (data instanceof Uint8Array) {
+    return BigInteger.fromArray(data);
   } else {
     return new BigInteger(data, 16);
   }
+}
+
+export function arrayToHexString(data: Uint8Array): string {
+  return Array.from(data)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+export function stringToArray(data: string): Uint8Array {
+  const array = new Uint8Array(data.length);
+  for (let n = 0; n < data.length; n++) {
+    array[n] = data.charCodeAt(n);
+  }
+  return array;
+}
+
+export function hexStringToArray(data: string) {
+  if (data.length % 2) {
+    data = '0' + data;
+  }
+  const array = new Uint8Array(data.length / 2);
+  for (let n = 0; n < data.length; n += 2) {
+    const v = parseInt(data.substring(n, n + 2), 16);
+    if (isNaN(v)) {
+      throw new Error('Invalid value in hex string: ' + data.substring(n, 2));
+    } else {
+      array[n / 2] = v;
+    }
+  }
+  return array;
+}
+
+export function base64ToArray(data: string): Uint8Array {
+  return stringToArray(atob(data.replace(/\-/g, '+').replace(/_/g, '/')));
+}
+
+export function arrayToBase64(data: Uint8Array): string {
+  return btoa(String.fromCharCode.apply(null, data));
 }

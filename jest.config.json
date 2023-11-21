@@ -1,6 +1,7 @@
 {
+  "testEnvironment": "../../jest-custom-env.js",
   "transform": {
-    "^.+\\.(ts|tsx)$": "ts-jest/preprocessor"
+    "^.+\\.(ts|tsx)$": "ts-jest"
   },
   "rootDir": "src/test",
   "testMatch": ["**/*.test.ts"],

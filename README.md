@@ -6,6 +6,10 @@ This package is designed to be used on a modern web browser, primarily to provid
 [@aws-sdk/client-cognito-identity-provider](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cognito-identity-provider/)
 package.
 
+SubtleCrypto is used for cryptography. It is only available in secure (e.g. https://) contexts, and
+so this package will not work otherwise. Note that for development, Chrome considers http://localhost
+as secure.
+
 ## History
 
 This package is forked from [cognito-srp](https://github.com/sjmeverett/cognito-srp/). It has been
@@ -58,14 +62,14 @@ The server will respond with the server key (`B`), the user's salt, and a secret
 The client can then create a session:
 
 ```js
-const session = challenge.getSession(B, salt);
+const session = await challenge.getSession(B, salt);
 ```
 
 Then, the client can calculate the signature as proof that it knows the password:
 
 ```js
 const timestamp = getTimestamp();
-const signature = session.calculateSignature(secretBlock, timestamp);
+const signature = await session.calculateSignature(secretBlock, timestamp);
 ```
 
 The client sends the secret block, timestamp and signature back to the server, and its
