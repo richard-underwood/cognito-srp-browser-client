@@ -92,6 +92,9 @@ import { UserPool } from 'cognito-srp-browser-client';
 
 [...]
 
+const cognitoClient = new CognitoIdentityProviderClient({ region: cognitoRegion });
+const srpUserPool = new UserPool(cognitoPoolId);
+
 const challenge = await srpUserPool.getClientChallenge({ email, password });
 
 const response = await cognitoClient.send(
