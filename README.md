@@ -1,4 +1,4 @@
-# cognito-srp-browser-client
+# cognito-srp-browser-client package
 
 Amazon Cognito Secure Remote Password client protocol for browsers.
 
@@ -9,6 +9,8 @@ package.
 SubtleCrypto is used for cryptography. It is only available in secure (e.g. https://) contexts, and
 so this package will not work otherwise. Note that for development, Chrome considers http://localhost
 as secure.
+
+This works for me, but your mileage may vary.
 
 ## History
 
