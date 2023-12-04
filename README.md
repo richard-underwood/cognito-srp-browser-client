@@ -1,4 +1,4 @@
-# cognito-srp-browser-client package
+# cognito-srp-browser-client package
 
 Amazon Cognito Secure Remote Password client protocol for browsers.
 
