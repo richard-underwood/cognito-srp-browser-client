@@ -5,6 +5,7 @@ import {
   calculateScramblingParameter,
   calculatePrivateKey,
   hexStringToArray,
+  arrayToHexString,
 } from './util';
 import { g, N, Nbytes, getMultiplierParameter } from './constants';
 import { Session } from './Session';
@@ -28,9 +29,17 @@ export class ClientPasswordChallenge {
     return this.A;
   }
 
-  async getSession(B: string, salt: string) {
+  getAString() {
+    return arrayToHexString(this.calculateA());
+  }
+
+  async getSession(B: string, salt: string, username?: string) {
     const multiplierParameter = await getMultiplierParameter();
     const Bint = new BigInteger(B, 16);
+
+    if (username) {
+      this.user.username = username;
+    }
 
     if (Bint.compareTo(BigInteger.ZERO) <= 0 || Bint.compareTo(N) >= 0) {
       throw new Error('A should be between 0 and N exclusive');

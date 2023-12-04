@@ -1,12 +1,12 @@
 {
   "name": "cognito-srp-browser-client",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "Amazon Cognito Secure Remote Password client protocol for browsers.",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
   "scripts": {
     "test": "jest --config=jest.config.json",
-    "prepublishOnly": "tsc"
+    "prepack": "tsc"
   },
   "contributors": [
     {

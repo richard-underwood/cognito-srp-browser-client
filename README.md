@@ -65,6 +65,9 @@ The client can then create a session:
 const session = await challenge.getSession(B, salt);
 ```
 
+This can optionally include a change of username, for example where initial login uses the
+user's e-mail address.
+
 Then, the client can calculate the signature as proof that it knows the password:
 
 ```js
@@ -74,6 +77,60 @@ const signature = await session.calculateSignature(secretBlock, timestamp);
 
 The client sends the secret block, timestamp and signature back to the server, and its
 identity is established.
+
+## Sample using @aws-sdk/client-cognito-identity-provider
+
+```js
+import {
+  CognitoIdentityProviderClient,
+  InitiateAuthCommand,
+  RespondToAuthChallengeCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
+import { UserPool } from 'cognito-srp-browser-client';
+
+[...]
+
+const challenge = await srpUserPool.getClientChallenge({ email, password });
+
+const response = await cognitoClient.send(
+  new InitiateAuthCommand({
+    AuthFlow: 'USER_SRP_AUTH',
+    AuthParameters: {
+      USERNAME: email,
+      SRP_A: challenge.getAString(),
+    },
+    ClientId: cognitoClientId,
+  })
+);
+
+if (response.ChallengeName === 'PASSWORD_VERIFIER') {
+  const session = await challenge.getSession(
+    response.ChallengeParameters.SRP_B,
+    response.ChallengeParameters.SALT,
+    response.ChallengeParameters.USER_ID_FOR_SRP
+  );
+
+  const timestamp = getTimestamp();
+  const signature = await session.calculateSignature(
+    response.ChallengeParameters.SECRET_BLOCK,
+    timestamp
+  );
+
+  const response2 = await cognitoClient.send(
+    new RespondToAuthChallengeCommand({
+      ChallengeName: 'PASSWORD_VERIFIER',
+      ChallengeResponses: {
+        PASSWORD_CLAIM_SIGNATURE: signature,
+        PASSWORD_CLAIM_SECRET_BLOCK: response.ChallengeParameters.SECRET_BLOCK,
+        TIMESTAMP: timestamp,
+        USERNAME: response.ChallengeParameters.USER_ID_FOR_SRP,
+      },
+      ClientId: cognitoClientId,
+    })
+  );
+}
+
+```
 
 ## Notes
 
