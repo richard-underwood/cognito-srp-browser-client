@@ -1,6 +1,9 @@
-# cognito-srp-browser-client package
+# cognito-srp-browser-client package #
 
-Amazon Cognito Secure Remote Password client protocol for browsers.
+This library adds support for [Secure Remote Password](https://en.wikipedia.org/wiki/Secure_Remote_Password_protocol)
+protocol for browsers, compatible with [Amazon Cognito](https://aws.amazon.com/cognito/).
+With this library, customers can authenticate to Amazon Cognito from the browser
+without sending their password over the network.
 
 This package is designed to be used on a modern web browser, primarily to provide SRP for the SDK v3
 [@aws-sdk/client-cognito-identity-provider](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cognito-identity-provider/)
@@ -32,7 +35,7 @@ yarn add cognito-srp-browser-client
 Then import. Your starting point will usually be the `UserPool` class:
 
 ```js
-import { UserPool } from ' cognito-srp-browser-client';
+import { UserPool } from 'cognito-srp-browser-client';
 ```
 
 Instantiate a pool, using your pool name:
@@ -44,8 +47,8 @@ const userPool = new UserPool('7DZy4Fkn7');
 Note that the pool name here is not the full `UserPoolId` that the AWS SDK asks for, i.e.:
 
 ```js
-const UserPoolId = 'us-east-2_7DZy4Fkn7';
-const poolname = UserPoolId.split('_')[1];
+const userPoolId = 'us-east-2_7DZy4Fkn7';
+const poolname = userPoolId.split('_')[1];
 ```
 
 Once the user has entered their username and password, you can create a challenge:
@@ -57,7 +60,7 @@ const challenge = await userPool.getClientChallenge({ username, password });
 You can then make a request to the server with the user's username and a client key (`A`):
 
 ```js
-const A = challenge.calculateA();
+const A = challenge.getAString();
 ```
 
 The server will respond with the server key (`B`), the user's salt, and a secret block.
@@ -80,6 +83,12 @@ const signature = await session.calculateSignature(secretBlock, timestamp);
 The client sends the secret block, timestamp and signature back to the server, and its
 identity is established.
 
+## SRP timestamp
+
+Amazon Cognito expects the timestamp to be in a specific format.
+Formatting the timestamp is outside the scope of this library, but I can recommend
+[luxon](https://moment.github.io/luxon/). The example below shows how.
+
 ## Sample using @aws-sdk/client-cognito-identity-provider
 
 ```js
@@ -89,6 +98,7 @@ import {
   RespondToAuthChallengeCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { UserPool } from 'cognito-srp-browser-client';
+import { DateTime } from "luxon"; // this is not a dependency of this library
 
 [...]
 
@@ -108,33 +118,37 @@ const response = await cognitoClient.send(
   })
 );
 
-if (response.ChallengeName === 'PASSWORD_VERIFIER') {
-  const session = await challenge.getSession(
-    response.ChallengeParameters.SRP_B,
-    response.ChallengeParameters.SALT,
-    response.ChallengeParameters.USER_ID_FOR_SRP
-  );
-
-  const timestamp = getTimestamp();
-  const signature = await session.calculateSignature(
-    response.ChallengeParameters.SECRET_BLOCK,
-    timestamp
-  );
-
-  const response2 = await cognitoClient.send(
-    new RespondToAuthChallengeCommand({
-      ChallengeName: 'PASSWORD_VERIFIER',
-      ChallengeResponses: {
-        PASSWORD_CLAIM_SIGNATURE: signature,
-        PASSWORD_CLAIM_SECRET_BLOCK: response.ChallengeParameters.SECRET_BLOCK,
-        TIMESTAMP: timestamp,
-        USERNAME: response.ChallengeParameters.USER_ID_FOR_SRP,
-      },
-      ClientId: cognitoClientId,
-    })
-  );
+if (response.ChallengeName !== 'PASSWORD_VERIFIER') {
+  throw new Error("Unexpected challenge");
 }
 
+const session = await challenge.getSession(
+  response.ChallengeParameters.SRP_B,
+  response.ChallengeParameters.SALT,
+  response.ChallengeParameters.USER_ID_FOR_SRP
+);
+
+const timestamp = DateTime.now()
+  .setZone("utc")
+  .toFormat("EEE MMM d HH:mm:ss ZZZZ yyyy");
+
+const signature = await session.calculateSignature(
+  response.ChallengeParameters.SECRET_BLOCK,
+  timestamp
+);
+
+const response2 = await cognitoClient.send(
+  new RespondToAuthChallengeCommand({
+    ChallengeName: 'PASSWORD_VERIFIER',
+    ChallengeResponses: {
+      PASSWORD_CLAIM_SIGNATURE: signature,
+      PASSWORD_CLAIM_SECRET_BLOCK: response.ChallengeParameters.SECRET_BLOCK,
+      TIMESTAMP: timestamp,
+      USERNAME: response.ChallengeParameters.USER_ID_FOR_SRP,
+    },
+    ClientId: cognitoClientId,
+  })
+);
 ```
 
 ## Notes
